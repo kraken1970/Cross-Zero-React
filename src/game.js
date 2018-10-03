@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Board from "./board";
+import calculateWinner from "./helpers/calculateWinner";
 
 export default class Game extends Component {
   state = {
@@ -16,6 +17,9 @@ export default class Game extends Component {
     const { xIsNext, history } = this.state;
     const current = history[history.length - 1];
     const squares = current.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
 
     squares[i] = xIsNext ? "X" : "O";
     this.setState({
@@ -25,10 +29,36 @@ export default class Game extends Component {
     });
   };
 
+  paintMoves() {
+    return this.state.history.map((step, move) => {
+      const desc = move ? "Move #" + move : "Start Game";
+      return (
+        <li key={move}>
+          <p onClick={() => this.jumpTo(move)} className="gameHistory">
+            {desc}
+          </p>
+        </li>
+      );
+    });
+  }
+
+  jumpTo = step => {
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 ? false : true
+    });
+  };
+
   render() {
     const { xIsNext, stepNumber, history } = this.state;
     const current = history[stepNumber];
-    const status = "Next player is: " + (xIsNext ? "X" : "O");
+    const winner = calculateWinner(current.squares);
+    let status;
+    if (winner) {
+      status = "Game ower! Winner is: " + winner;
+    } else {
+      status = "Next player is: " + (xIsNext ? "X" : "O");
+    }
 
     return (
       <div className="game">
@@ -37,7 +67,7 @@ export default class Game extends Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ul>{/*history*/}</ul>
+          <ul>{this.paintMoves()}</ul>
         </div>
       </div>
     );
